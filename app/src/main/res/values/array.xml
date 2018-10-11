@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="ARRAY_categoria">
+        <item>CAR</item>
+        <item>Zonal</item>
+        <item>Autonómica</item>
+        <item>1a División</item>
+        <item>Liga EBA</item>
+        <item>LEB Plata</item>
+        <item>LEB Oro</item>
+        <item>Liga Femenina</item>
+        <item>Liga ACB</item>
+    </string-array>
+    <string-array name="ARRAY_rol">
+        <item>Oficial de Mesa</item>
+        <item>Árbitro</item>
+    </string-array>
+</resources>

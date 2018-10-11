@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">CTAFbcv</string>
+    <string name="ET_licencia">Licencia</string>
+    <string name="ET_dni">Dni</string>
+    <string name="ET_origen">Origen</string>
+    <string name="ET_passWebCTA">Password Web CTA</string>
+    <string name="ET_Correo">Correo</string>
+    <string name="TV_DatosAcceso">Datos de Acceso</string>
+    <string name="Btn_Guardar">Guardar</string>
+
+
+</resources>
