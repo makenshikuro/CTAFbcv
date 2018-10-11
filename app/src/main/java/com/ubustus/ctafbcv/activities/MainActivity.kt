@@ -16,7 +16,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-
         val spCategoria = findViewById<Spinner>(R.id.spCategoria)
         val spRol = findViewById<Spinner>(R.id.spRol)
         val btnGuardar = findViewById<Button>(R.id.BtnGuardarDatos)
@@ -24,34 +23,22 @@ class MainActivity : AppCompatActivity() {
             if(validaDatos()){
                 Toast.makeText(this, "hola", Toast.LENGTH_SHORT).show()
             }
-
         }
-
 
         spCategoria.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>,
                                         v: android.view.View, position: Int, id: Long) {
                 txtCategoria = parent.getItemAtPosition(position).toString()
-
             }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {
-
-            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
         spRol.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>,
                                         v: android.view.View, position: Int, id: Long) {
                 txtRol = parent.getItemAtPosition(position).toString()
-
             }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {
-
-            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
-
-
     }
 
     fun validaDatos(): Boolean {
