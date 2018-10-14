@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
         btnGuardar.setOnClickListener {
             if(validaDatos()){
                 Toast.makeText(this, "hola", Toast.LENGTH_SHORT).show()
+                goToPrincipalActivity()
             }
         }
 
@@ -61,6 +62,6 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun goToMainPage()= startActivity(Intent(this, PrincipalActivity::class.java))
+    private fun goToPrincipalActivity()= startActivity(Intent(this, PrincipalActivity::class.java))
 
 }
