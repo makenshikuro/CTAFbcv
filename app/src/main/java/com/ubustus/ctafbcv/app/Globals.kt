@@ -6,9 +6,11 @@ import com.ubustus.ctafbcv.others.MySharedPreferences
 val preferences:MySharedPreferences by lazy { Globals.prefs!! }
 
 class Globals: Application(){
-    var eurosxkm = 0.16f
-    var minimo = 4
-    private var data = 200
+    val eurosxkm = 0.16f
+    val minimo = 4
+    val urlOficina = "https://intrafeb.feb.es/OficinaWebArbitro/"
+    val urlDesignaciones = "https://intrafeb.feb.es/OficinaWebArbitro/Paginas/Designaciones.aspx"
+
 
 
 

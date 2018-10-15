@@ -7,6 +7,7 @@
     <string name="ET_Correo">Correo</string>
     <string name="TV_DatosAcceso">Datos de Acceso</string>
     <string name="Btn_Guardar">Guardar</string>
+    <string name="Btn_Designaciones">Designaciones</string>
 
 
 </resources>

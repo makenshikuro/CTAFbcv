@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         val btnGuardar = findViewById<Button>(R.id.BtnGuardarDatos)
         btnGuardar.setOnClickListener {
             if(validaDatos()){
-                Toast.makeText(this, "hola", Toast.LENGTH_SHORT).show()
+                //Toast.makeText(this, "hola", Toast.LENGTH_SHORT).show()
                 goToPrincipalActivity()
             }
         }
@@ -57,6 +57,7 @@ class MainActivity : AppCompatActivity() {
         preferences.origen = etOrigen.toString()
         preferences.dni = etDni.toString()
         preferences.passWeb = etPassWeb.toString()
+        preferences.firstRun = false
         Toast.makeText(this, "Los valores se han guardado", Toast.LENGTH_SHORT).show()
 
         return true

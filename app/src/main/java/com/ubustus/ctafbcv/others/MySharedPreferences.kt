@@ -29,6 +29,10 @@ class MySharedPreferences(context: Context){
     var rol:String
         get() = prefs.getString("rol","")
         set(value) = prefs.edit().putString("rol", value).apply()
+    var firstRun:Boolean
+        get() = prefs.getBoolean("firstRun",true)
+        set(value) = prefs.edit().putBoolean("firstRun", value).apply()
+
 
 
 }
