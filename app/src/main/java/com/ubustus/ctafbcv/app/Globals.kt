@@ -13,7 +13,6 @@ class Globals: Application(){
 
 
 
-
     companion object {
         var prefs: MySharedPreferences? = null
     }

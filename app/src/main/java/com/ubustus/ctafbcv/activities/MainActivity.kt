@@ -60,6 +60,8 @@ class MainActivity : AppCompatActivity() {
         preferences.firstRun = false
         Toast.makeText(this, "Los valores se han guardado", Toast.LENGTH_SHORT).show()
 
+
+
         return true
     }
 
