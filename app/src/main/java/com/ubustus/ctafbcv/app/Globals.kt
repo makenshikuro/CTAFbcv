@@ -7,7 +7,7 @@ val preferences:MySharedPreferences by lazy { Globals.prefs!! }
 
 class Globals: Application(){
     val eurosxkm = 0.16f
-    val minimo = 4
+    val minimo = 4.0f
     val urlOficina = "https://intrafeb.feb.es/OficinaWebArbitro/"
     val urlDesignaciones = "https://intrafeb.feb.es/OficinaWebArbitro/Paginas/Designaciones.aspx"
 

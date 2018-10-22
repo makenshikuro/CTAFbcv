@@ -13,53 +13,147 @@ import com.ubustus.ctafbcv.app.Globals
 import com.ubustus.ctafbcv.app.preferences
 import com.ubustus.ctafbcv.clases.Partido
 import org.jetbrains.anko.doAsync
+import org.joda.time.DateTime
+import org.joda.time.Period
 import org.json.JSONObject
 import org.jsoup.Connection
 import org.jsoup.Jsoup
-import java.text.Normalizer
 import java.text.SimpleDateFormat
+import java.util.*
 import java.util.regex.Pattern
 
-
-
-
 class DesignacionesActivity : AppCompatActivity(){
-
-
-    //val g = application as Globals
-
     var g = Globals()
+    var partidos:MutableList<Partido> = mutableListOf<Partido>()
     //var strGlobalVar = mApp.globalVar
     //var eurosxkm = g.eurosxkm
     //var minimo = g.minimo
+    val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm")
+    val format = SimpleDateFormat("dd.MM.yyyy")
+    val formatoSQL = SimpleDateFormat("yyyy-MM-dd")
+    //val fmt = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_designaciones)
         Toast.makeText(this, "designaciones", Toast.LENGTH_SHORT).show()
         //Log.i("TAG", "yei!")
+        partidos.clear()
         designacion()
+
+
         //Log.i("TAG", "size: ${da.size}")
+    }
+
+    private fun calcularDesignacion(){
+
+        if(partidos.size == 0){
+            Toast.makeText(this, "No hay Designaciones", Toast.LENGTH_SHORT).show()
+        }
+        else if(partidos.size == 1){
+            var partido = partidos[0]
+
+            partido.tipoPartido = 1
+            //partido.desplazamiento = partido.distancia * g.eurosxkm
+
+            /*if(partido.desplazamiento < g.minimo){
+                partido.desplazamiento = g.minimo
+            }*/
+
+        }
+
+        else if(partidos.size > 1){
+            Log.i("TAG2", "CalculaDesignacion - ${partidos.size}")
+            for (i in 0..(partidos.size-1)) {
+                var actual = partidos[i]
+
+                if (i == 1) {  //Si es el primero sólo puede ser Sólo Ida o Ida/Vuelta
+                    var siguiente = partidos[i + 1]
+
+                    if (mismaLocalidad(actual, siguiente) && TiempoEntrePartidosInferior(actual, siguiente)) {
+                        actual.tipoPartido = 2
+                    } else if (!mismaLocalidad(actual, siguiente) && TiempoEntrePartidosInferior(actual, siguiente)) {
+                        actual.tipoPartido = 2
+                    } else{
+                        actual.tipoPartido = 1
+                    }
+
+                }else{
+                    var anterior = partidos[i - 1]
+
+
+
+                    if (i + 1 == partidos.size){
+
+                    }
+
+                    if (i + 1 < partidos.size) {
+
+
+                        var siguiente = partidos[i + 1]
+
+                        when (anterior.tipoPartido){
+
+                            0,1 -> print(" (0,1) partido $i")
+                            2 -> print(" (2) partido $i")
+                            3 -> print(" (3) partido $i")
+                            4 -> print(" (4) partido $i")
+                            5 -> print(" (5) partido $i")
+                        }
+
+
+
+
+
+
+                    }
+
+
+                }
+
+
+
+            }
+        }
+
+        for (i in 0..(partidos.size-1)) {
+            Log.i("TAG2", "tipoPartido - ${partidos[i].tipoPartido}")
+        }
+
+
+
+    }
+    fun mismaLocalidad(actual:Partido, siguiente:Partido):Boolean{
+        return actual.localidad == siguiente.localidad
+    }
+    fun TiempoEntrePartidosInferior(actual:Partido, siguiente:Partido):Boolean{
+
+        val period = Period( DateTime(actual.fecha),  DateTime(siguiente.fecha))
+        var horas = Math.abs(period.hours)
+
+        Log.i("TAG", "Horas diferencia partido ${actual.codigo} - $horas")
+
+        //var sec = diff/1000
+        //var min = sec/60
+        //var horas = min/60
+
+        return horas > 3.0f
+
     }
 
     fun designacion() {
 
         doAsync {
             var result = buscaDesignacion()
+
         }
 
     }
-
-
     private fun buscaDesignacion(): MutableList<Partido> {
-        var partidos:MutableList<Partido> = mutableListOf<Partido>()
-
         try {
-
             var con = Jsoup.connect(g.urlOficina)
                     .method(Connection.Method.GET)
                     .execute()
-
             val loginPage = con.parse()
             val eventValidation = loginPage.select("input[name=__EVENTVALIDATION]").first()
             val viewState = loginPage.select("input[name=__VIEWSTATE]").first()
@@ -83,10 +177,8 @@ class DesignacionesActivity : AppCompatActivity(){
 
             val updated_at = doc.select("#fechaPubTextBox").attr("value")
 
-
-
-            for (i in 0..npartidos){
-                var fecha = doc.getElementById("designacionesDataGrid_fechaLabel_$i")
+            for (i in 0..(npartidos-1)){
+                var date = doc.getElementById("designacionesDataGrid_fechaLabel_$i")
                         .html()
                         .replace("<b>Día:</b>", "")
                         .replace("<br><b>Hora:</b>", "")
@@ -133,10 +225,7 @@ class DesignacionesActivity : AppCompatActivity(){
                         .replace("Localidad:</b>".toRegex(), "")
                         .replace("<br>".toRegex(), "")
 
-                localidad = Normalizer.normalize(localidad, Normalizer.Form.NFD)
-                        .replace("\\p{InCombiningDiacriticalMarks}+", "");
-                //localidad = Normalizer.normalize(localidad, Normalizer.Form.NFD);
-                //localidad = localidad.replace("\\p{M}", "")
+                localidad = normalizeText(localidad)
 
 
                 var Mcod = Pattern.compile("\\(([^)]+)\\)").matcher(codigo)
@@ -174,12 +263,9 @@ class DesignacionesActivity : AppCompatActivity(){
                         .replace("<\\w>(.*?)<\\/\\w>".toRegex(), "")
                         .replace("\\(([^)]+)?\\)".toRegex(), "")
 
-
-                val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm")
-                val format = SimpleDateFormat("dd.MM.yyyy")
-                val formatoSQL = SimpleDateFormat("yyyy-MM-dd")
+                var fecha: Date = Date()
                 try {
-                    fecha = formatter.parse(fecha).toString()
+                    fecha = formatter.parse(date)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -251,7 +337,7 @@ class DesignacionesActivity : AppCompatActivity(){
                     cat = cat + "Consorcio"
                 }
 
-                var origen = preferences.origen
+                var origen = normalizeText(preferences.origen)
 
                 //val urlGoogleAPI = "https://maps.googleapis.com/maps/api/distancematrix/json?language=es&origins=$origen&destinations=$localidad&avoid=tolls&key=AIzaSyAvdO229uC6xMjLJB1WiQTznncBEHotoUw"
                 val urlGoogleAPI = "http://open.mapquestapi.com/directions/v2/route?key=XNtAJb6ihLTY6BQOWEpTemgv8on7DoIT&from=$origen&to=$localidad"
@@ -272,22 +358,27 @@ class DesignacionesActivity : AppCompatActivity(){
                 Log.i("TAG", "localidad - $localidad")
                 Log.i("TAG", "Response - $urlGoogleAPI")
 
-                getDistanciaAPI(i, urlGoogleAPI)
+                //getDistanciaAPI(i, urlGoogleAPI)
 
-                var partido = Partido(codigo,encuentro,fecha,categoria,0.0f, 0.0f,localidad,0, arbPrin,arbAux,arbAux2,omActa,omCrono,om24)
+                var partido = Partido(codigo,encuentro,fecha,categoria,0.0f, 0.0f,localidad,0,0.0f ,arbPrin,arbAux,arbAux2,omActa,omCrono,om24, 0)
 
                 partidos.add(partido)
                 //Log.i("TAG", "data$i - $data")
             }
+
+
             //Log.i("TAG", "partidos - $npartidos")
 
         }catch (e:Exception){
 
         }
 
+        Log.i("TAG", "CalculaDesignacion")
+        calcularDesignacion()
+
+
         return partidos
     }
-
     fun getDistanciaAPI(pos: Int, url:String){
         val queue = Volley.newRequestQueue(this)
 
@@ -295,7 +386,7 @@ class DesignacionesActivity : AppCompatActivity(){
         // Request a string response from the provided URL.
         val stringRequest = StringRequest(Request.Method.GET, url,
                 Response.Listener<String> { response ->
-                    Log.i("TAG", "Response$pos - $response")
+                    //Log.i("TAG", "Response$pos - $response")
                     calculaDatos(pos,response)
                 },
                 Response.ErrorListener { Log.i("TAG", "Error Response") })
@@ -306,14 +397,26 @@ class DesignacionesActivity : AppCompatActivity(){
         //Log.i("TAG", "ResponseOut - $d")
     }
     fun calculaDatos(pos:Int, response:String){
-        Log.i("TAG", "ruta1 - $response")
         val jObject = JSONObject(response)
         val jObject2 = jObject.getJSONObject("route")
-        //val aJsonInteger = jObject2.getString("distance")
-        val aFloat = jObject2.getInt("time")
-        //val gson = GsonBuilder().setPrettyPrinting().create() // for pretty print feature
+        val distancia:Float = jObject2.getString("distance").toFloat() * 1.685f
 
-        //Log.i("TAG", "ruta2 - $aJsonInteger")
-        Log.i("TAG", "ruta2F - $aFloat")
+        var partido = partidos[pos]
+        partido.distancia = distancia
+
+        partidos[pos]= partido
+
+        Log.i("TAG", "distancia - $distancia")
+    }
+    fun normalizeText(text:String):String {
+
+        var normalizeText = text
+               .replace("í","i")
+               .replace("ú", "u")
+               .replace("ó|ò", "o")
+               .replace("á|à", "a")
+               .replace("é|è", "e")
+
+        return normalizeText
     }
 }
