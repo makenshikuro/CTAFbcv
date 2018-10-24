@@ -1,26 +1,29 @@
 package com.ubustus.ctafbcv.activities
 
+//import com.android.volley.Request
+//import com.android.volley.Response
+//import com.android.volley.toolbox.StringRequest
+//import com.android.volley.toolbox.Volley
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
 import com.ubustus.ctafbcv.R
 import com.ubustus.ctafbcv.app.Globals
 import com.ubustus.ctafbcv.app.preferences
 import com.ubustus.ctafbcv.clases.Partido
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.jetbrains.anko.doAsync
-import org.joda.time.DateTime
-import org.joda.time.Period
 import org.json.JSONObject
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.regex.Pattern
+
+
+
 
 class DesignacionesActivity : AppCompatActivity(){
     var g = Globals()
@@ -54,11 +57,7 @@ class DesignacionesActivity : AppCompatActivity(){
             var partido = partidos[0]
 
             partido.tipoPartido = 1
-            //partido.desplazamiento = partido.distancia * g.eurosxkm
 
-            /*if(partido.desplazamiento < g.minimo){
-                partido.desplazamiento = g.minimo
-            }*/
 
         }
 
@@ -67,77 +66,192 @@ class DesignacionesActivity : AppCompatActivity(){
             for (i in 0..(partidos.size-1)) {
                 var actual = partidos[i]
 
-                if (i == 1) {  //Si es el primero sólo puede ser Sólo Ida o Ida/Vuelta
+                if (i == 0) {  //Si es el primero sólo puede ser Sólo Ida o Ida/Vuelta
                     var siguiente = partidos[i + 1]
 
                     if (mismaLocalidad(actual, siguiente) && TiempoEntrePartidosInferior(actual, siguiente)) {
                         actual.tipoPartido = 2
                     } else if (!mismaLocalidad(actual, siguiente) && TiempoEntrePartidosInferior(actual, siguiente)) {
                         actual.tipoPartido = 2
-                    } else{
+                    } else if(mismaLocalidad(actual, siguiente) && !TiempoEntrePartidosInferior(actual, siguiente)){
+                        actual.tipoPartido = 1
+                    }else{
                         actual.tipoPartido = 1
                     }
 
-                }else{
+                    partidos[i] = actual
+
+                }else{ // Si no es el primero
                     var anterior = partidos[i - 1]
 
-
-
-                    if (i + 1 == partidos.size){
-
-                    }
-
-                    if (i + 1 < partidos.size) {
-
-
+                    if (i + 1 < partidos.size) { //Hay "siguiente" partido
                         var siguiente = partidos[i + 1]
 
                         when (anterior.tipoPartido){
 
-                            0,1 -> print(" (0,1) partido $i")
-                            2 -> print(" (2) partido $i")
-                            3 -> print(" (3) partido $i")
-                            4 -> print(" (4) partido $i")
-                            5 -> print(" (5) partido $i")
+                            0,1 -> { // Null o Ida/Vuelta
+
+                                if (mismaLocalidad(actual, siguiente) && TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 2
+                                } else if (!mismaLocalidad(actual, siguiente) && TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 2
+                                } else if(mismaLocalidad(actual, siguiente) && !TiempoEntrePartidosInferior(actual, siguiente)){
+                                    actual.tipoPartido = 1
+                                }else{
+                                    actual.tipoPartido = 1
+                                }
+                            }
+
+                            2 -> { //Solo Ida
+
+                                if (mismaLocalidad(actual, siguiente) && !TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 3
+                                } else if (mismaLocalidad(actual, siguiente) && TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 4
+                                } else if (!mismaLocalidad(actual, siguiente) && !TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 7
+                                    actual.origen = anterior.localidad
+                                }else{
+                                    actual.tipoPartido = 6
+                                    actual.origen = anterior.localidad
+                                }
+                            }
+                            3 -> { //Solo Vuelta
+
+                                if (mismaLocalidad(actual, siguiente) && !TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 1
+                                } else if (mismaLocalidad(actual, siguiente) && TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 2
+                                } else if (!mismaLocalidad(actual, siguiente) && !TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 1
+                                }else{
+                                    actual.tipoPartido = 5
+                                    actual.origen = anterior.localidad
+                                }
+                            }
+                            4 -> { //Solo partido
+
+                                if (mismaLocalidad(actual, siguiente) && !TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 3
+                                } else if (mismaLocalidad(actual, siguiente) && TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 4
+                                } else if (!mismaLocalidad(actual, siguiente) && !TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 3
+                                }else{
+                                    actual.tipoPartido = 5
+                                    actual.origen = anterior.localidad
+
+                                }
+                            }
+                            5,6 ->{ // (5)Nuevo Origen (Ida) - (6)Nuevo Origen (Solo Partido) -
+                                if (mismaLocalidad(actual, siguiente) && !TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 7
+
+                                } else if (mismaLocalidad(actual, siguiente) && TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 5
+                                } else if (!mismaLocalidad(actual, siguiente) && !TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 7
+                                }else{
+                                    actual.tipoPartido = 5
+                                }
+                                actual.origen = anterior.localidad
+                            }
+                            7 -> { //  (7)Nuevo Origen (Vuelta)
+
+                                if (mismaLocalidad(actual, siguiente) && TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 2
+                                } else if (!mismaLocalidad(actual, siguiente) && TiempoEntrePartidosInferior(actual, siguiente)) {
+                                    actual.tipoPartido = 2
+                                } else if(mismaLocalidad(actual, siguiente) && !TiempoEntrePartidosInferior(actual, siguiente)){
+                                    actual.tipoPartido = 1
+                                }else{
+                                    actual.tipoPartido = 1
+                                }
+                            }
+
+
                         }
+                    }
+                    else{ //Siendo último puede ser Ida/Vuelta - Solo Vuelta - Nuevo Origen/Vuelta
 
+                        when (anterior.tipoPartido){
 
+                            0,1 -> {
+                                    actual.tipoPartido = 1
+                            }
 
+                            2 -> {
 
+                                if (mismaLocalidad(actual, anterior) ) {
+                                    actual.tipoPartido = 3
+                                } else{
+                                    actual.tipoPartido = 7
+                                    actual.origen = anterior.localidad
+                                }
+                            }
+                            3 -> {
+                                actual.tipoPartido = 1
+                            }
+                            4,5,6 -> {
 
+                                if (mismaLocalidad(actual, anterior) ) {
+                                    actual.tipoPartido = 3
+                                } else{
+                                    actual.tipoPartido = 7
+                                    actual.origen = anterior.localidad
+                                }
+                            }
+                            7 -> {
+                                actual.tipoPartido = 1
+                            }
+
+                        }
 
                     }
 
 
+
+
                 }
+                partidos[i] = actual
 
-
+                partidos[i].distancia = getDistanciaSincro(actual,false)
+                if(actual.tipoPartido == 7){
+                    partidos[i].distancia += getDistanciaSincro(actual,true)
+                }
+                //getDistanciaAPI(i,actual)
 
             }
         }
 
         for (i in 0..(partidos.size-1)) {
             Log.i("TAG2", "tipoPartido - ${partidos[i].tipoPartido}")
+            Log.i("TAG", "distancia ($i) - ${partidos[i].distancia}")
+            Log.i("TAG", "trayecto ($i) - ${partidos[i].origen} - ${partidos[i].localidad}")
         }
 
 
 
     }
+
     fun mismaLocalidad(actual:Partido, siguiente:Partido):Boolean{
         return actual.localidad == siguiente.localidad
     }
     fun TiempoEntrePartidosInferior(actual:Partido, siguiente:Partido):Boolean{
 
-        val period = Period( DateTime(actual.fecha),  DateTime(siguiente.fecha))
-        var horas = Math.abs(period.hours)
+        //val period = Period( DateTime(actual.fecha),  DateTime(siguiente.fecha))
+        //var min = Math.abs(period.hours)
+
+        val diff =  siguiente.fecha.time - actual.fecha.time
+        var sec = diff/1000
+        var min:Float = sec/60.0f
+        var horas = min/60
 
         Log.i("TAG", "Horas diferencia partido ${actual.codigo} - $horas")
 
-        //var sec = diff/1000
-        //var min = sec/60
-        //var horas = min/60
 
-        return horas > 3.0f
+
+        return horas < 3.0f
 
     }
 
@@ -339,8 +453,6 @@ class DesignacionesActivity : AppCompatActivity(){
 
                 var origen = normalizeText(preferences.origen)
 
-                //val urlGoogleAPI = "https://maps.googleapis.com/maps/api/distancematrix/json?language=es&origins=$origen&destinations=$localidad&avoid=tolls&key=AIzaSyAvdO229uC6xMjLJB1WiQTznncBEHotoUw"
-                val urlGoogleAPI = "http://open.mapquestapi.com/directions/v2/route?key=XNtAJb6ihLTY6BQOWEpTemgv8on7DoIT&from=$origen&to=$localidad"
 
                 Log.i("TAG", "partidos - $i")
                 Log.i("TAG", "fecha - $fecha")
@@ -356,11 +468,11 @@ class DesignacionesActivity : AppCompatActivity(){
                 Log.i("TAG", "crono - $omCrono")
                 Log.i("TAG", "24s - $om24")
                 Log.i("TAG", "localidad - $localidad")
-                Log.i("TAG", "Response - $urlGoogleAPI")
+                //Log.i("TAG", "Response - $urlGoogleAPI")
 
                 //getDistanciaAPI(i, urlGoogleAPI)
 
-                var partido = Partido(codigo,encuentro,fecha,categoria,0.0f, 0.0f,localidad,0,0.0f ,arbPrin,arbAux,arbAux2,omActa,omCrono,om24, 0)
+                var partido = Partido(codigo,encuentro,fecha,categoria,0.0f, origen, 0.0f,localidad,0,0.0f ,arbPrin,arbAux,arbAux2,omActa,omCrono,om24, 0)
 
                 partidos.add(partido)
                 //Log.i("TAG", "data$i - $data")
@@ -379,7 +491,33 @@ class DesignacionesActivity : AppCompatActivity(){
 
         return partidos
     }
-    fun getDistanciaAPI(pos: Int, url:String){
+
+    fun getDistanciaSincro(partido: Partido, vuelta:Boolean):Float{
+        var url:String = ""
+
+        when(vuelta){
+           false -> url = "http://open.mapquestapi.com/directions/v2/route?key=XNtAJb6ihLTY6BQOWEpTemgv8on7DoIT&from=${partido.origen}&to=${partido.localidad}"
+           true -> url = "http://open.mapquestapi.com/directions/v2/route?key=XNtAJb6ihLTY6BQOWEpTemgv8on7DoIT&from=${partido.localidad}&to=${preferences.origen}"
+        }
+
+        val client = OkHttpClient()
+        val request = Request.Builder()
+                .url(url)
+                .build()
+
+        val response = client.newCall(request).execute()
+        val jObject = JSONObject(response.body()!!.string())
+        val jObject2 = jObject.getJSONObject("route")
+
+
+        return jObject2.getString("distance").toFloat() * 1.685f
+    }
+    /*fun getDistanciaAPI(pos:Int,partido: Partido){
+
+        //val urlGoogleAPI = "https://maps.googleapis.com/maps/api/distancematrix/json?language=es&origins=$origen&destinations=$localidad&avoid=tolls&key=AIzaSyAvdO229uC6xMjLJB1WiQTznncBEHotoUw"
+        val url = "http://open.mapquestapi.com/directions/v2/route?key=XNtAJb6ihLTY6BQOWEpTemgv8on7DoIT&from=${partido.origen}&to=${partido.localidad}"
+
+
         val queue = Volley.newRequestQueue(this)
 
 
@@ -394,19 +532,81 @@ class DesignacionesActivity : AppCompatActivity(){
         // Add the request to the RequestQueue.
         queue.add(stringRequest)
 
+        if (partido.tipoPartido == 6){
+            val urlReturn = "http://open.mapquestapi.com/directions/v2/route?key=XNtAJb6ihLTY6BQOWEpTemgv8on7DoIT&from=${partido.localidad}&to=${preferences.origen}"
+
+            val queueReturn = Volley.newRequestQueue(this)
+
+
+            // Request a string response from the provided URL.
+            val stringRequestReturn = StringRequest(Request.Method.GET, urlReturn,
+                    Response.Listener<String> { response ->
+                        //Log.i("TAG", "Response$pos - $response")
+                        calculaDatos(pos,response)
+                    },
+                    Response.ErrorListener { Log.i("TAG", "Error Response") })
+
+            // Add the request to the RequestQueue.
+            queueReturn.add(stringRequestReturn)
+
+        }
+
         //Log.i("TAG", "ResponseOut - $d")
-    }
+    }*/
     fun calculaDatos(pos:Int, response:String){
         val jObject = JSONObject(response)
         val jObject2 = jObject.getJSONObject("route")
         val distancia:Float = jObject2.getString("distance").toFloat() * 1.685f
 
         var partido = partidos[pos]
+
+        when(partido.tipoPartido){
+            1 ->{
+                partido.desplazamiento = distancia * g.eurosxkm * 2
+                if(distancia * g.eurosxkm * 2 < g.minimo){
+                    partido.desplazamiento = g.minimo
+                }
+            }
+            2 ->{
+                partido.desplazamiento = distancia * g.eurosxkm
+                if(distancia * g.eurosxkm < g.minimo/2){
+                    partido.desplazamiento = g.minimo/2
+                }
+            }
+            3 ->{
+                partido.desplazamiento = distancia * g.eurosxkm
+                if(distancia * g.eurosxkm < g.minimo/2){
+                    partido.desplazamiento = g.minimo/2
+                }
+            }
+            4 ->{
+                partido.desplazamiento = 0.0f
+            }
+            5 ->{
+                partido.desplazamiento = distancia * g.eurosxkm
+                if(distancia * g.eurosxkm < g.minimo/2){
+                    partido.desplazamiento = g.minimo/2
+                }
+            }
+            6 ->{
+                partido.distancia += distancia
+                partido.desplazamiento += distancia * g.eurosxkm
+                if(distancia * g.eurosxkm < g.minimo/2){
+                    partido.desplazamiento += g.minimo/2
+                }
+
+
+            }
+        }
+
+
         partido.distancia = distancia
 
         partidos[pos]= partido
 
-        Log.i("TAG", "distancia - $distancia")
+        Log.i("TAG", "tipo($pos) - ${partido.tipoPartido}")
+        Log.i("TAG", "distancia($pos) - ${partido.distancia}")
+        Log.i("TAG", "desplazamiento($pos) - ${partido.desplazamiento}")
     }
     fun normalizeText(text:String):String {
 

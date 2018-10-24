@@ -37,6 +37,7 @@ dependencies {
     implementation "org.jetbrains.anko:anko-commons:0.10.4"
     implementation "joda-time:joda-time:2.9.4"
     implementation 'com.android.volley:volley:1.1.1'
+    implementation 'com.squareup.okhttp3:okhttp:3.11.0'
     implementation group: 'com.google.code.gson', name: 'gson', version: '2.7'
 
 }
